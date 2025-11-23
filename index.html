@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Special Question</title>
+    <title>A Special Question for Hanae</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- HTML2Canvas for image generation -->
@@ -36,7 +36,7 @@
             background: #f9a8d4; 
             border-radius: 4px;
         }
-        /* Confetti animation keyframes */
+        /* Animations */
         @keyframes pop {
             0% { transform: scale(0); opacity: 0; }
             50% { transform: scale(1.2); opacity: 1; }
@@ -44,6 +44,13 @@
         }
         .pop-in {
             animation: pop 0.5s ease-out forwards;
+        }
+        .fade-in {
+            animation: fadeIn 1s ease-in forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
 </head>
@@ -71,8 +78,8 @@
         <p id="errorMsg" class="text-red-500 mt-4 hidden text-sm font-bold">Access Denied. You are not the chosen one! 😋</p>
     </div>
 
-    <!-- STAGE 2: THE CONTRACT (Initially Hidden) -->
-    <div id="contractScreen" class="hidden max-w-2xl w-full relative z-10">
+    <!-- STAGE 2: THE CONTRACT -->
+    <div id="contractScreen" class="hidden max-w-2xl w-full relative z-10 transition-all duration-500">
         
         <!-- The Printable Area -->
         <div id="certificate" class="glass-panel p-8 md:p-12 rounded-xl relative overflow-hidden bg-white">
@@ -141,26 +148,37 @@
             </div>
         </div>
 
-        <!-- Action Buttons (Not part of the screenshot) -->
+        <!-- Action Buttons -->
         <div id="actionButtons" class="mt-8 flex justify-center gap-4">
-            <button onclick="signContract()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-full shadow-lg transform transition hover:scale-105 flex items-center gap-2">
-                <span>✍️</span> I Agree / Sign Here
+            <button onclick="handleAgree()" class="bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold py-4 px-8 rounded-full shadow-lg transform transition hover:scale-105 flex items-center gap-2">
+                <span>❤️</span> Yes, I Agree!
             </button>
-            <button onmouseover="moveButton(this)" class="bg-gray-300 text-gray-500 font-bold py-4 px-8 rounded-full shadow-inner cursor-not-allowed transition-all absolute" style="left: -9999px;">
-                No Thanks
+            <button onclick="confirmDisagree()" class="bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold py-4 px-8 rounded-full shadow-md transform transition hover:scale-105 flex items-center gap-2">
+                <span>💔</span> Decline
             </button>
         </div>
 
-        <!-- Download Section (Hidden until signed) -->
-        <div id="downloadSection" class="hidden mt-8 text-center animate-pulse">
-            <button onclick="downloadImage()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-3 px-6 rounded-lg shadow-xl flex items-center justify-center mx-auto gap-2 transform transition hover:-translate-y-1">
+        <!-- Download & Notify Section (Hidden until decision) -->
+        <div id="postDecisionSection" class="hidden mt-8 text-center animate-pulse">
+            <p id="decisionMessage" class="text-purple-600 font-bold mb-4 text-lg">Processing decision...</p>
+            <button id="downloadBtn" onclick="downloadImage()" class="hidden bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-3 px-6 rounded-lg shadow-xl flex items-center justify-center mx-auto gap-2 transform transition hover:-translate-y-1">
                 <span>📸</span> Save as Image Souvenir
             </button>
-            <p class="text-gray-500 text-sm mt-2">Saving this moment forever...</p>
         </div>
     </div>
 
+    <!-- REJECTION SCREEN (Hidden by default) -->
+    <div id="rejectionScreen" class="hidden glass-panel p-8 rounded-2xl max-w-md w-full text-center relative z-10 fade-in">
+        <span class="text-6xl mb-4 block">😢</span>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Oh no...</h2>
+        <p class="text-gray-600">I respect your decision completely. Thank you for being honest.</p>
+    </div>
+
     <script>
+        // --- CONFIGURATION ---
+        // PLEASE CHANGE THIS TO YOUR EMAIL!
+        const YOUR_EMAIL = "khalilxdroid@gmail.com"; 
+        
         // Set today's date
         const date = new Date();
         document.getElementById('dateDisplay').textContent = date.toLocaleDateString();
@@ -171,18 +189,14 @@
             const lockScreen = document.getElementById('lockScreen');
             const contractScreen = document.getElementById('contractScreen');
             
-            // Simple check (trim whitespace and ignore case)
             if (input.value.trim().toLowerCase() === 'hanae') {
-                // Success animation
                 lockScreen.style.transform = 'scale(0.9) opacity(0)';
                 setTimeout(() => {
                     lockScreen.classList.add('hidden');
                     contractScreen.classList.remove('hidden');
-                    // Add a slight pop-in for contract
                     contractScreen.classList.add('pop-in');
                 }, 500);
             } else {
-                // Shake animation for error
                 lockScreen.classList.add('animate-bounce');
                 setTimeout(() => lockScreen.classList.remove('animate-bounce'), 500);
                 error.classList.remove('hidden');
@@ -190,39 +204,68 @@
             }
         }
 
-        function signContract() {
+        function handleAgree() {
+            // UI Updates
             const sig = document.getElementById('hanaeSignature');
             const placeholder = document.getElementById('signaturePlaceholder');
             const stamp = document.getElementById('stamp');
             const buttons = document.getElementById('actionButtons');
-            const download = document.getElementById('downloadSection');
+            const postSection = document.getElementById('postDecisionSection');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const msg = document.getElementById('decisionMessage');
 
-            // Show signature
+            // Sign Logic
             placeholder.classList.add('hidden');
             sig.classList.remove('hidden');
-            
-            // Show stamp
             stamp.classList.remove('hidden');
-
-            // Hide the agree button and show download button
             buttons.classList.add('hidden');
-            download.classList.remove('hidden');
-            download.classList.add('pop-in');
-
-            // Trigger confetti (simulated via simple CSS logic or just alert/console)
+            postSection.classList.remove('hidden');
+            downloadBtn.classList.remove('hidden');
+            
+            msg.textContent = "Best choice ever! Notifying Khalil...";
+            
+            // Celebration
             confettiEffect();
+
+            // Email Notification (Agree)
+            setTimeout(() => {
+                const subject = encodeURIComponent("I Said YES! ❤️");
+                const body = encodeURIComponent("Hey Khalil,\n\nI signed the contract! I agree to be your girlfriend.\n\nLove,\nHanae");
+                window.location.href = `mailto:${YOUR_EMAIL}?subject=${subject}&body=${body}`;
+            }, 1500);
+        }
+
+        function confirmDisagree() {
+            if(confirm("Are you sure? This might make the developer (and Khalil) very sad... 🥺")) {
+                handleDisagree();
+            }
+        }
+
+        function handleDisagree() {
+            const contractScreen = document.getElementById('contractScreen');
+            const rejectionScreen = document.getElementById('rejectionScreen');
+
+            contractScreen.style.opacity = '0';
+            setTimeout(() => {
+                contractScreen.classList.add('hidden');
+                rejectionScreen.classList.remove('hidden');
+            }, 500);
+
+            // Email Notification (Disagree)
+            setTimeout(() => {
+                const subject = encodeURIComponent("Regarding the contract... 💔");
+                const body = encodeURIComponent("Hey Khalil,\n\nI saw the contract. I'm sorry, but I have to decline for now.\n\nBest,\nHanae");
+                window.location.href = `mailto:${YOUR_EMAIL}?subject=${subject}&body=${body}`;
+            }, 2000);
         }
 
         function downloadImage() {
             const element = document.getElementById("certificate");
-            
-            // Use html2canvas to take a screenshot of the specific div
             html2canvas(element, {
-                scale: 2, // Higher resolution
-                backgroundColor: null, // Transparent background if possible, or white
-                useCORS: true // Handle external fonts
+                scale: 2,
+                backgroundColor: null,
+                useCORS: true
             }).then(canvas => {
-                // Create a dummy link to trigger download
                 const link = document.createElement('a');
                 link.download = 'Our_Agreement_Signed.png';
                 link.href = canvas.toDataURL("image/png");
@@ -230,43 +273,32 @@
             });
         }
 
-        function moveButton(btn) {
-            // Makes the "No" button run away if you ever decided to show it properly
-            // Currently hidden by CSS positioning logic but keeping logic just in case
-            const x = Math.random() * (window.innerWidth - btn.offsetWidth);
-            const y = Math.random() * (window.innerHeight - btn.offsetHeight);
-            btn.style.position = 'fixed';
-            btn.style.left = x + 'px';
-            btn.style.top = y + 'px';
-        }
-
         function confettiEffect() {
-            // A simple JS confetti burst without external library weight
-            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'];
-            for(let i=0; i<50; i++) {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#ff69b4'];
+            for(let i=0; i<100; i++) {
                 const conf = document.createElement('div');
                 conf.style.position = 'fixed';
                 conf.style.left = '50%';
                 conf.style.top = '50%';
-                conf.style.width = '10px';
-                conf.style.height = '10px';
+                conf.style.width = Math.random() * 10 + 5 + 'px';
+                conf.style.height = Math.random() * 10 + 5 + 'px';
                 conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                conf.style.transition = 'all 1s ease-out';
+                conf.style.transition = 'all 1.5s ease-out';
                 conf.style.zIndex = '100';
+                conf.style.borderRadius = '50%';
                 document.body.appendChild(conf);
 
                 setTimeout(() => {
-                    const x = (Math.random() - 0.5) * window.innerWidth;
-                    const y = (Math.random() - 0.5) * window.innerHeight;
-                    conf.style.transform = `translate(${x}px, ${y}px) rotate(${Math.random()*360}deg)`;
+                    const x = (Math.random() - 0.5) * window.innerWidth * 1.5;
+                    const y = (Math.random() - 0.5) * window.innerHeight * 1.5;
+                    conf.style.transform = `translate(${x}px, ${y}px) rotate(${Math.random()*720}deg)`;
                     conf.style.opacity = '0';
                 }, 10);
 
-                setTimeout(() => conf.remove(), 1000);
+                setTimeout(() => conf.remove(), 1500);
             }
         }
         
-        // Allow "Enter" key on input
         document.getElementById("nameInput").addEventListener("keyup", function(event) {
             if (event.key === "Enter") {
                 checkName();
