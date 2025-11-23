@@ -15,6 +15,7 @@
         body {
             font-family: 'Nunito', sans-serif;
             background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            transition: background 1s ease;
         }
         .handwriting {
             font-family: 'Dancing Script', cursive;
@@ -36,6 +37,7 @@
             background: #f9a8d4; 
             border-radius: 4px;
         }
+        
         /* Animations */
         @keyframes pop {
             0% { transform: scale(0); opacity: 0; }
@@ -52,17 +54,40 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
+
+        /* Heartbeat Animation for Yes Button */
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            14% { transform: scale(1.1); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.1); }
+            70% { transform: scale(1); }
+        }
+        .heartbeat {
+            animation: heartbeat 2s infinite;
+        }
+
+        /* Rain Animation */
+        .rain-drop {
+            position: fixed;
+            top: -20px;
+            width: 2px;
+            height: 15px;
+            background: #8aa;
+            z-index: 50;
+        }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 overflow-hidden relative">
+<!-- UPDATED: Changed overflow-hidden to overflow-auto to allow scrolling if content is too tall -->
+<body id="mainBody" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 overflow-auto relative">
 
     <!-- Background Decorative Elements -->
-    <div class="absolute top-0 left-0 w-64 h-64 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-    <div class="absolute top-0 right-0 w-64 h-64 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-    <div class="absolute -bottom-8 left-20 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+    <div id="blob1" class="fixed top-0 left-0 w-64 h-64 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+    <div id="blob2" class="fixed top-0 right-0 w-64 h-64 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+    <div id="blob3" class="fixed -bottom-8 left-20 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
 
     <!-- STAGE 1: LOCK SCREEN -->
-    <div id="lockScreen" class="glass-panel p-8 rounded-2xl max-w-md w-full text-center relative z-10 transition-all duration-500">
+    <div id="lockScreen" class="glass-panel p-8 rounded-2xl max-w-md w-full text-center relative z-10 transition-all duration-500 my-auto">
         <div class="mb-6">
             <span class="text-5xl">🔒</span>
         </div>
@@ -79,10 +104,10 @@
     </div>
 
     <!-- STAGE 2: THE CONTRACT -->
-    <div id="contractScreen" class="hidden max-w-2xl w-full relative z-10 transition-all duration-500">
+    <div id="contractScreen" class="hidden max-w-2xl w-full relative z-10 transition-all duration-500 py-10">
         
         <!-- The Printable Area -->
-        <div id="certificate" class="glass-panel p-8 md:p-12 rounded-xl relative overflow-hidden bg-white">
+        <div id="certificate" class="glass-panel p-8 md:p-12 rounded-xl relative overflow-hidden bg-white mx-auto">
             
             <!-- Decorative Header -->
             <div class="text-center mb-8 border-b-2 border-dashed border-gray-300 pb-6">
@@ -149,17 +174,22 @@
         </div>
 
         <!-- Action Buttons -->
-        <div id="actionButtons" class="mt-8 flex justify-center gap-4">
-            <button onclick="handleAgree()" class="bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold py-4 px-8 rounded-full shadow-lg transform transition hover:scale-105 flex items-center gap-2">
+        <!-- Added z-50 to ensure they sit on top and margin-bottom for scrolling space -->
+        <div id="buttonContainer" class="mt-8 relative h-24 flex justify-center items-center gap-6 z-50 mb-10">
+            
+            <button onclick="handleAgree()" class="heartbeat bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold py-4 px-10 rounded-full shadow-lg transform transition hover:scale-105 flex items-center gap-2 text-lg cursor-pointer z-50">
                 <span>❤️</span> Yes, I Agree!
             </button>
-            <button onclick="confirmDisagree()" class="bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold py-4 px-8 rounded-full shadow-md transform transition hover:scale-105 flex items-center gap-2">
+
+            <!-- Disagree button with mouseover event for fleeing -->
+            <button id="noBtn" onmouseover="runAway(this)" onclick="confirmDisagree()" class="bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold py-4 px-8 rounded-full shadow-md transition-all duration-200 flex items-center gap-2 cursor-pointer z-50">
                 <span>💔</span> Decline
             </button>
+
         </div>
 
         <!-- Download & Notify Section (Hidden until decision) -->
-        <div id="postDecisionSection" class="hidden mt-8 text-center animate-pulse">
+        <div id="postDecisionSection" class="hidden mt-8 text-center animate-pulse mb-10">
             <p id="decisionMessage" class="text-purple-600 font-bold mb-4 text-lg">Processing decision...</p>
             <button id="downloadBtn" onclick="downloadImage()" class="hidden bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-3 px-6 rounded-lg shadow-xl flex items-center justify-center mx-auto gap-2 transform transition hover:-translate-y-1">
                 <span>📸</span> Save as Image Souvenir
@@ -168,17 +198,20 @@
     </div>
 
     <!-- REJECTION SCREEN (Hidden by default) -->
-    <div id="rejectionScreen" class="hidden glass-panel p-8 rounded-2xl max-w-md w-full text-center relative z-10 fade-in">
+    <div id="rejectionScreen" class="hidden glass-panel p-8 rounded-2xl max-w-md w-full text-center relative z-10 fade-in border-gray-400">
         <span class="text-6xl mb-4 block">😢</span>
         <h2 class="text-2xl font-bold text-gray-800 mb-2">Oh no...</h2>
-        <p class="text-gray-600">I respect your decision completely. Thank you for being honest.</p>
+        <p class="text-gray-600">I respect your decision completely.<br>It's raining in my heart now.</p>
     </div>
 
     <script>
         // --- CONFIGURATION ---
-        // PLEASE CHANGE THIS TO YOUR EMAIL!
         const YOUR_EMAIL = "khalilxdroid@gmail.com"; 
         
+        // Variables for the "Run Away" button
+        let runCount = 0;
+        const maxRuns = 3; 
+
         // Set today's date
         const date = new Date();
         document.getElementById('dateDisplay').textContent = date.toLocaleDateString();
@@ -204,12 +237,40 @@
             }
         }
 
+        // The "Run Away" Logic
+        function runAway(btn) {
+            if (runCount < maxRuns) {
+                // Get viewport dimensions
+                const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+                const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+                
+                // Button dimensions
+                const btnW = btn.offsetWidth;
+                const btnH = btn.offsetHeight;
+
+                // Calculate random position within safe bounds
+                // We use fixed positioning to break out of layout flow
+                const maxX = vw - btnW - 40;
+                const maxY = vh - btnH - 40;
+                
+                const newX = Math.max(20, Math.random() * maxX);
+                const newY = Math.max(20, Math.random() * maxY);
+                
+                btn.style.position = 'fixed';
+                btn.style.left = newX + 'px';
+                btn.style.top = newY + 'px';
+                btn.style.zIndex = '9999'; // Ensure it stays on top
+                
+                runCount++;
+            }
+        }
+
         function handleAgree() {
             // UI Updates
             const sig = document.getElementById('hanaeSignature');
             const placeholder = document.getElementById('signaturePlaceholder');
             const stamp = document.getElementById('stamp');
-            const buttons = document.getElementById('actionButtons');
+            const buttonContainer = document.getElementById('buttonContainer');
             const postSection = document.getElementById('postDecisionSection');
             const downloadBtn = document.getElementById('downloadBtn');
             const msg = document.getElementById('decisionMessage');
@@ -218,7 +279,7 @@
             placeholder.classList.add('hidden');
             sig.classList.remove('hidden');
             stamp.classList.remove('hidden');
-            buttons.classList.add('hidden');
+            buttonContainer.classList.add('hidden'); // Hide the Yes/No buttons
             postSection.classList.remove('hidden');
             downloadBtn.classList.remove('hidden');
             
@@ -236,7 +297,7 @@
         }
 
         function confirmDisagree() {
-            if(confirm("Are you sure? This might make the developer (and Khalil) very sad... 🥺")) {
+            if (confirm("Are you really sure? 🥺")) {
                 handleDisagree();
             }
         }
@@ -244,11 +305,21 @@
         function handleDisagree() {
             const contractScreen = document.getElementById('contractScreen');
             const rejectionScreen = document.getElementById('rejectionScreen');
+            const body = document.getElementById('mainBody');
+            const blobs = document.querySelectorAll('.animate-blob');
+
+            // Change background to sad gray
+            body.classList.remove('bg-gradient-to-br', 'from-pink-100', 'via-purple-100', 'to-blue-100');
+            body.style.backgroundColor = '#374151'; // dark gray
+
+            // Hide colorful blobs
+            blobs.forEach(blob => blob.style.display = 'none');
 
             contractScreen.style.opacity = '0';
             setTimeout(() => {
                 contractScreen.classList.add('hidden');
                 rejectionScreen.classList.remove('hidden');
+                startRain(); // Trigger rain animation
             }, 500);
 
             // Email Notification (Disagree)
@@ -275,7 +346,7 @@
 
         function confettiEffect() {
             const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#ff69b4'];
-            for(let i=0; i<100; i++) {
+            for(let i=0; i<150; i++) {
                 const conf = document.createElement('div');
                 conf.style.position = 'fixed';
                 conf.style.left = '50%';
@@ -297,6 +368,28 @@
 
                 setTimeout(() => conf.remove(), 1500);
             }
+        }
+
+        function startRain() {
+            setInterval(() => {
+                const drop = document.createElement('div');
+                drop.classList.add('rain-drop');
+                drop.style.left = Math.random() * window.innerWidth + 'px';
+                drop.style.animationDuration = Math.random() * 0.5 + 0.5 + 's';
+                
+                document.body.appendChild(drop);
+                
+                // Animate drop falling
+                const animation = drop.animate([
+                    { top: '-20px', opacity: 1 },
+                    { top: window.innerHeight + 'px', opacity: 0.5 }
+                ], {
+                    duration: Math.random() * 1000 + 500,
+                    easing: 'linear'
+                });
+
+                animation.onfinish = () => drop.remove();
+            }, 50);
         }
         
         document.getElementById("nameInput").addEventListener("keyup", function(event) {
