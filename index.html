@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Special Question</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTML2Canvas for image generation -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <!-- Google Fonts for handwriting -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+        }
+        .handwriting {
+            font-family: 'Dancing Script', cursive;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        /* Custom scrollbar for cuteness */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f9a8d4; 
+            border-radius: 4px;
+        }
+        /* Confetti animation keyframes */
+        @keyframes pop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pop-in {
+            animation: pop 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 overflow-hidden relative">
+
+    <!-- Background Decorative Elements -->
+    <div class="absolute top-0 left-0 w-64 h-64 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+    <div class="absolute top-0 right-0 w-64 h-64 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+    <div class="absolute -bottom-8 left-20 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+
+    <!-- STAGE 1: LOCK SCREEN -->
+    <div id="lockScreen" class="glass-panel p-8 rounded-2xl max-w-md w-full text-center relative z-10 transition-all duration-500">
+        <div class="mb-6">
+            <span class="text-5xl">🔒</span>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Restricted Access</h2>
+        <p class="text-gray-500 mb-6">This document is intended for one specific person. Please identify yourself.</p>
+        
+        <input type="text" id="nameInput" placeholder="Enter your first name..." 
+            class="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all mb-4 text-center text-lg">
+        
+        <button onclick="checkName()" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform transition hover:-translate-y-1 hover:shadow-xl active:translate-y-0">
+            Unlock Document
+        </button>
+        <p id="errorMsg" class="text-red-500 mt-4 hidden text-sm font-bold">Access Denied. You are not the chosen one! 😋</p>
+    </div>
+
+    <!-- STAGE 2: THE CONTRACT (Initially Hidden) -->
+    <div id="contractScreen" class="hidden max-w-2xl w-full relative z-10">
+        
+        <!-- The Printable Area -->
+        <div id="certificate" class="glass-panel p-8 md:p-12 rounded-xl relative overflow-hidden bg-white">
+            
+            <!-- Decorative Header -->
+            <div class="text-center mb-8 border-b-2 border-dashed border-gray-300 pb-6">
+                <h1 class="font-bold text-3xl md:text-4xl bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500 mb-2">
+                    Official Relationship Agreement
+                </h1>
+                <p class="text-gray-400 text-sm tracking-widest uppercase">Contract No. <span id="dateDisplay"></span></p>
+            </div>
+
+            <!-- Contract Body -->
+            <div class="space-y-6 text-gray-700 leading-relaxed">
+                <p class="text-lg">
+                    This binding agreement is made between <span class="font-bold text-purple-600 text-xl">Khalil</span> (The Proposer) and <span class="font-bold text-pink-600 text-xl">Hanae</span> (The Priority).
+                </p>
+
+                <div class="bg-pink-50 p-6 rounded-lg border border-pink-100">
+                    <h3 class="font-bold text-pink-500 mb-3 uppercase tracking-wide text-xs">Terms & Conditions</h3>
+                    <ul class="list-none space-y-3">
+                        <li class="flex items-start">
+                            <span class="mr-2 text-xl">🌈</span> 
+                            <span><strong>Article 1:</strong> Life shall be filled with colors, not just black and white.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="mr-2 text-xl">🍫</span> 
+                            <span><strong>Article 2:</strong> Khalil agrees to share snacks, even the really good ones.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="mr-2 text-xl">💖</span> 
+                            <span><strong>Article 3:</strong> Hanae agrees to be the loveliest girlfriend in the world.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <p class="text-center text-xl font-semibold italic text-gray-600 mt-8">
+                    "Hanae, will you do me the honor of being my girlfriend?"
+                </p>
+            </div>
+
+            <!-- Signatures Section -->
+            <div class="mt-12 flex justify-between items-end px-4">
+                <div class="text-center">
+                    <div class="handwriting text-3xl text-blue-600 mb-2 transform -rotate-6">Khalil</div>
+                    <div class="border-t-2 border-gray-400 w-32 mx-auto"></div>
+                    <p class="text-xs text-gray-400 mt-1 uppercase">Signed by Khalil</p>
+                </div>
+
+                <!-- Approved Stamp (Hidden until signed) -->
+                <div id="stamp" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-4 border-red-500 rounded-full p-2 animate-bounce opacity-80 rotate-12 pointer-events-none">
+                    <div class="border-2 border-red-500 rounded-full px-6 py-2">
+                        <span class="text-red-500 font-black text-2xl uppercase tracking-widest">OFFICIAL</span>
+                    </div>
+                </div>
+
+                <div class="text-center relative">
+                    <!-- Hanae's Signature Placeholder -->
+                    <div id="hanaeSignature" class="handwriting text-4xl text-pink-600 mb-2 transform -rotate-3 hidden pop-in">Hanae</div>
+                    <!-- Empty space before signing -->
+                    <div id="signaturePlaceholder" class="h-10 mb-2 w-32"></div>
+                    
+                    <div class="border-t-2 border-gray-400 w-32 mx-auto"></div>
+                    <p class="text-xs text-gray-400 mt-1 uppercase">Signed by Hanae</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons (Not part of the screenshot) -->
+        <div id="actionButtons" class="mt-8 flex justify-center gap-4">
+            <button onclick="signContract()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-full shadow-lg transform transition hover:scale-105 flex items-center gap-2">
+                <span>✍️</span> I Agree / Sign Here
+            </button>
+            <button onmouseover="moveButton(this)" class="bg-gray-300 text-gray-500 font-bold py-4 px-8 rounded-full shadow-inner cursor-not-allowed transition-all absolute" style="left: -9999px;">
+                No Thanks
+            </button>
+        </div>
+
+        <!-- Download Section (Hidden until signed) -->
+        <div id="downloadSection" class="hidden mt-8 text-center animate-pulse">
+            <button onclick="downloadImage()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-3 px-6 rounded-lg shadow-xl flex items-center justify-center mx-auto gap-2 transform transition hover:-translate-y-1">
+                <span>📸</span> Save as Image Souvenir
+            </button>
+            <p class="text-gray-500 text-sm mt-2">Saving this moment forever...</p>
+        </div>
+    </div>
+
+    <script>
+        // Set today's date
+        const date = new Date();
+        document.getElementById('dateDisplay').textContent = date.toLocaleDateString();
+
+        function checkName() {
+            const input = document.getElementById('nameInput');
+            const error = document.getElementById('errorMsg');
+            const lockScreen = document.getElementById('lockScreen');
+            const contractScreen = document.getElementById('contractScreen');
+            
+            // Simple check (trim whitespace and ignore case)
+            if (input.value.trim().toLowerCase() === 'hanae') {
+                // Success animation
+                lockScreen.style.transform = 'scale(0.9) opacity(0)';
+                setTimeout(() => {
+                    lockScreen.classList.add('hidden');
+                    contractScreen.classList.remove('hidden');
+                    // Add a slight pop-in for contract
+                    contractScreen.classList.add('pop-in');
+                }, 500);
+            } else {
+                // Shake animation for error
+                lockScreen.classList.add('animate-bounce');
+                setTimeout(() => lockScreen.classList.remove('animate-bounce'), 500);
+                error.classList.remove('hidden');
+                input.classList.add('border-red-500');
+            }
+        }
+
+        function signContract() {
+            const sig = document.getElementById('hanaeSignature');
+            const placeholder = document.getElementById('signaturePlaceholder');
+            const stamp = document.getElementById('stamp');
+            const buttons = document.getElementById('actionButtons');
+            const download = document.getElementById('downloadSection');
+
+            // Show signature
+            placeholder.classList.add('hidden');
+            sig.classList.remove('hidden');
+            
+            // Show stamp
+            stamp.classList.remove('hidden');
+
+            // Hide the agree button and show download button
+            buttons.classList.add('hidden');
+            download.classList.remove('hidden');
+            download.classList.add('pop-in');
+
+            // Trigger confetti (simulated via simple CSS logic or just alert/console)
+            confettiEffect();
+        }
+
+        function downloadImage() {
+            const element = document.getElementById("certificate");
+            
+            // Use html2canvas to take a screenshot of the specific div
+            html2canvas(element, {
+                scale: 2, // Higher resolution
+                backgroundColor: null, // Transparent background if possible, or white
+                useCORS: true // Handle external fonts
+            }).then(canvas => {
+                // Create a dummy link to trigger download
+                const link = document.createElement('a');
+                link.download = 'Our_Agreement_Signed.png';
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            });
+        }
+
+        function moveButton(btn) {
+            // Makes the "No" button run away if you ever decided to show it properly
+            // Currently hidden by CSS positioning logic but keeping logic just in case
+            const x = Math.random() * (window.innerWidth - btn.offsetWidth);
+            const y = Math.random() * (window.innerHeight - btn.offsetHeight);
+            btn.style.position = 'fixed';
+            btn.style.left = x + 'px';
+            btn.style.top = y + 'px';
+        }
+
+        function confettiEffect() {
+            // A simple JS confetti burst without external library weight
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'];
+            for(let i=0; i<50; i++) {
+                const conf = document.createElement('div');
+                conf.style.position = 'fixed';
+                conf.style.left = '50%';
+                conf.style.top = '50%';
+                conf.style.width = '10px';
+                conf.style.height = '10px';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.transition = 'all 1s ease-out';
+                conf.style.zIndex = '100';
+                document.body.appendChild(conf);
+
+                setTimeout(() => {
+                    const x = (Math.random() - 0.5) * window.innerWidth;
+                    const y = (Math.random() - 0.5) * window.innerHeight;
+                    conf.style.transform = `translate(${x}px, ${y}px) rotate(${Math.random()*360}deg)`;
+                    conf.style.opacity = '0';
+                }, 10);
+
+                setTimeout(() => conf.remove(), 1000);
+            }
+        }
+        
+        // Allow "Enter" key on input
+        document.getElementById("nameInput").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                checkName();
+            }
+        });
+    </script>
+</body>
+</html>
